@@ -16,6 +16,7 @@ class MyServer(BaseHTTPRequestHandler):
 	lambdaUrl = ''
 	isRunning = False
 	deviceId = os.getenv('DEVICE_NAME')
+	excelIds = []
 
 	def do_POST(self):
 		self.send_response(200)
@@ -28,7 +29,7 @@ class MyServer(BaseHTTPRequestHandler):
 		data = json.loads(jsonStr)
 
 		if self.path == "/start":
-			self.processQueue(data['url'])
+			self.processQueue(data['url'], data['excelId'])
 			return
 
 	def do_GET(self):
@@ -46,8 +47,14 @@ class MyServer(BaseHTTPRequestHandler):
 		self.wfile.write(bytes("<h2>Status: %s</h2>" % runningStr, "utf-8"))
 		self.wfile.write(bytes("</body></html>", "utf-8"))
 
-	def processQueue(self, url):
-		print("START %s" % url)
+	def processQueue(self, url, excelId):
+		print("START %s - %s" % (url, excelId))
+
+		try:
+			self.excelIds.index(excelId)
+		except ValueError:
+			self.excelIds.push(excelId)
+
 		if self.isRunning:
 			return
 		if url == None:
@@ -57,13 +64,20 @@ class MyServer(BaseHTTPRequestHandler):
 		self.requestNewTask()
 
 	def requestNewTask(self):
-		url = "%s/getSiriTask/%s" % (self.lambdaUrl, self.deviceId)
+		if self.excelIds.__len__() == 0:
+			self.isRunning = False
+			return
+
+		excelId = self.excelIds[0]
+		url = "%s/getSiriTask/%s/%s" % (self.lambdaUrl, excelId, self.deviceId)
 		r = requests.get(url = url)
 		task = r.json()
-		print("New Task")
+		print("New Task - %s" % excelId)
 		print(task)
 		if (task['success'] == False):
-			self.isRunning = False
+			print("Task %s is done" % excelId)
+			self.excelIds.pop(0)
+			self.requestNewTask()
 			return
 
 		# task: {excelId, key, query}
