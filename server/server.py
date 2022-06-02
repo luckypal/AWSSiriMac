@@ -4,7 +4,7 @@ import os
 from os import unlink
 import time
 import json
-# import ask_siri
+import ask_siri
 import requests
 
 load_dotenv()
@@ -57,7 +57,7 @@ class MyServer(BaseHTTPRequestHandler):
 		self.requestNewTask()
 
 	def requestNewTask(self):
-		url = "%s/getSiriTask/%s" % self.lambdaUrl % self.deviceId
+		url = "%s/getSiriTask/%s" % (self.lambdaUrl, self.deviceId)
 		r = requests.get(url = url)
 		task = r.json()
 		print("New Task")
