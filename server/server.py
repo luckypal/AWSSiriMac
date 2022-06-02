@@ -4,7 +4,7 @@ import os
 from os import unlink
 import time
 import json
-# import ask_siri
+import ask_siri
 import requests
 
 load_dotenv()
@@ -28,7 +28,7 @@ class MyServer(BaseHTTPRequestHandler):
 		data = json.loads(jsonStr)
 
 		if self.path == "/start":
-			self.processQueue(self, data.url)
+			self.processQueue(self, data['url'])
 			return
 
 	def do_GET(self):
@@ -59,30 +59,32 @@ class MyServer(BaseHTTPRequestHandler):
 		url = "%s/getSiriTask/%s" % self.lambdaUrl % self.deviceId
 		r = requests.get(url = url)
 		task = r.json()
+		print("New Task")
+		print(task)
 		if (task.success == False):
 			self.isRunning = False
 			return
 
 		# task: {excelId, key, query}
 		uniqueId = "%s-%s" % task.excelId % task.key
-		# siriResponse, siriImageFilename = ask_siri.ask_siri(task.query, uniqueId)
-		# requestData = {
-		# 	'excelId': task.excelId,
-		# 	'key': task.key,
-		# 	'text': siriResponse,
-		# }
-		# url = "%s/uploadSiriResult" % self.lambdaUrl
+		siriResponse, siriImageFilename = ask_siri.ask_siri(task.query, uniqueId)
+		requestData = {
+			'excelId': task.excelId,
+			'key': task.key,
+			'text': siriResponse,
+		}
+		url = "%s/uploadSiriResult" % self.lambdaUrl
 
-		# files = {}
-		# if (siriImageFilename != None):
-		# 	files = {
-		# 		'imageFile': open(siriImageFilename, 'rb')
-		# 	}
-		# requests.post(url = url, data = requestData, files = files)
-		# if (siriImageFilename != None):
-		# 	unlink(siriImageFilename)
+		files = {}
+		if (siriImageFilename != None):
+			files = {
+				'imageFile': open(siriImageFilename, 'rb')
+			}
+		requests.post(url = url, data = requestData, files = files)
+		if (siriImageFilename != None):
+			unlink(siriImageFilename)
 
-		# self.requestNewTask(self)
+		self.requestNewTask(self)
 
 def start_server():
 	webServer = HTTPServer((hostName, serverPort), MyServer)
