@@ -4,7 +4,7 @@ import os
 from os import unlink
 import time
 import json
-import ask_siri
+# import ask_siri
 import requests
 
 load_dotenv()
@@ -28,7 +28,7 @@ class MyServer(BaseHTTPRequestHandler):
 		data = json.loads(jsonStr)
 
 		if self.path == "/start":
-			self.processQueue(self, data['url'])
+			self.processQueue(data['url'])
 			return
 
 	def do_GET(self):
@@ -47,13 +47,14 @@ class MyServer(BaseHTTPRequestHandler):
 		self.wfile.write(bytes("</body></html>", "utf-8"))
 
 	def processQueue(self, url):
+		print("START %s" % url)
 		if self.isRunning:
 			return
 		if url == None:
 			return
 		self.lambdaUrl = url
 		self.isRunning = True
-		self.requestNewTask(self)
+		self.requestNewTask()
 
 	def requestNewTask(self):
 		url = "%s/getSiriTask/%s" % self.lambdaUrl % self.deviceId
@@ -84,7 +85,7 @@ class MyServer(BaseHTTPRequestHandler):
 		if (siriImageFilename != None):
 			unlink(siriImageFilename)
 
-		self.requestNewTask(self)
+		self.requestNewTask()
 
 def start_server():
 	webServer = HTTPServer((hostName, serverPort), MyServer)
