@@ -62,16 +62,19 @@ class MyServer(BaseHTTPRequestHandler):
 		task = r.json()
 		print("New Task")
 		print(task)
-		if (task.success == False):
+		if (task['success'] == False):
 			self.isRunning = False
 			return
 
 		# task: {excelId, key, query}
-		uniqueId = "%s-%s" % task.excelId % task.key
-		siriResponse, siriImageFilename = ask_siri.ask_siri(task.query, uniqueId)
+		excelId = task['excelId']
+		key = task['key']
+		query = task['query']
+		uniqueId = "%s-%s" % excelId % key
+		siriResponse, siriImageFilename = ask_siri.ask_siri(query, uniqueId)
 		requestData = {
-			'excelId': task.excelId,
-			'key': task.key,
+			'excelId': excelId,
+			'key': key,
 			'text': siriResponse,
 		}
 		url = "%s/uploadSiriResult" % self.lambdaUrl
