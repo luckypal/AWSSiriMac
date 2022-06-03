@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
+from os import mkdir
 import sys, subprocess, keyboard, time, re
+import os.path
+from pathlib import Path
 
 if sys.platform == "darwin":
 	from AppKit import NSWorkspace
@@ -195,6 +198,8 @@ def ask_siri(query, unique_id=None, image_filepath='images/'):
 
 	image_filename = None
 	if unique_id != None:
+		if Path(image_filepath).is_dir() == False:
+			mkdir(image_filepath)
 		image_filename = image_filepath + unique_id + '.jpg'
 		screenshot_window(get_active_window_id(), image_filename)
 
