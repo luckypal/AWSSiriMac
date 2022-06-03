@@ -53,7 +53,7 @@ class MyServer(BaseHTTPRequestHandler):
 		if excelId in self.excelIds:
 			print("Already exist excel ID")
 		else:
-			self.excelIds.push(excelId)
+			self.excelIds.append(excelId)
 
 		if self.isRunning:
 			return
