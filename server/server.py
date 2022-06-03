@@ -84,7 +84,7 @@ class MyServer(BaseHTTPRequestHandler):
 		excelId = task['excelId']
 		key = task['key']
 		query = task['query']
-		uniqueId = "%s-%s" % excelId % key
+		uniqueId = "%s-%s" % (excelId % key)
 		siriResponse, siriImageFilename = ask_siri.ask_siri(query, uniqueId)
 		requestData = {
 			'excelId': excelId,
