@@ -69,7 +69,7 @@ class MyServer(BaseHTTPRequestHandler):
 			return
 
 		excelId = self.excelIds[0]
-		url = "%s/getSiriTask/%s/%s" % (self.lambdaUrl, excelId, self.deviceId)
+		url = "%s/getSiriTask?excelId=%s&deviceId=%s" % (self.lambdaUrl, excelId, self.deviceId)
 		r = requests.get(url = url)
 		task = r.json()
 		print("New Task - %s" % excelId)
