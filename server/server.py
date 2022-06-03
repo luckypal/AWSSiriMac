@@ -50,9 +50,9 @@ class MyServer(BaseHTTPRequestHandler):
 	def processQueue(self, url, excelId):
 		print("START %s - %s" % (url, excelId))
 
-		try:
-			self.excelIds.index(excelId)
-		except ValueError:
+		if excelId in self.excelIds:
+			print("Already exist excel ID")
+		else:
 			self.excelIds.push(excelId)
 
 		if self.isRunning:
