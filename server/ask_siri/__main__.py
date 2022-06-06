@@ -8,8 +8,11 @@ def main():
 		sys.exit()
 
 	query = args[args.index('-q') + 1]
+	unique_id = None
+	if '-id' in args:
+		unique_id = args[args.index('-id') + 1]
 
-	print(ask_siri.ask_siri(query))
+	print(ask_siri.ask_siri(query, unique_id = unique_id))
 
 if __name__ == '__main__':
 	main()

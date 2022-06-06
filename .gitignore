@@ -6,3 +6,5 @@ dist
 .idea
 .agignore
 .env
+
+images
