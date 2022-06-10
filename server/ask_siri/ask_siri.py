@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 
-from os import mkdir
+from os import mkdir, unlink
+from shutil import move
 import sys, subprocess, keyboard, time, re
 import os.path
+import os
 from pathlib import Path
+from PIL import Image
 
 if sys.platform == "darwin":
 	from AppKit import NSWorkspace
@@ -17,6 +20,8 @@ error_flag = '~*ERROR*~'
 end_of_string_flag = '~*INTOUCH*~'
 apple_ui_value_blacklist = [ 'missing value, ', '…, ' ]
 siri_utterance_value_blacklist = [ 'App Store', 'Location Services' ]
+
+maxHeight = 1260 # int(os.getenv('MAX_HEIGHT'))
 
 applescripts = {
 	'ask_siri': '''
@@ -202,6 +207,7 @@ def ask_siri(query, unique_id=None, image_filepath='images/'):
 			mkdir(image_filepath)
 		image_filename = image_filepath + unique_id + '.jpg'
 		screenshot_window(get_active_window_id(), image_filename)
+		crop_image(image_filename)
 
 	if error_flag in siri_utterance:
 		response = 'ERROR'
@@ -216,3 +222,15 @@ def ask_siri(query, unique_id=None, image_filepath='images/'):
 	run_osascript(applescripts['close_siri'])
 	response = parse_siri_output(scraped_data, query)
 	return response, image_filename
+
+def crop_image(imageFilePath):
+	img = Image.open(imageFilePath)
+	if (img.height < maxHeight):
+		return imageFilePath
+
+	newImageFilePath = imageFilePath + '.cropped.png'
+	newImg = img.crop((0, 0, img.width, maxHeight))
+	newImg.save(newImageFilePath)
+	unlink(imageFilePath)
+	move(newImageFilePath, imageFilePath)
+	return imageFilePath
