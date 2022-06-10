@@ -4,8 +4,9 @@ import os
 from os import unlink
 import time
 import json
-import ask_siri
+# import ask_siri
 import requests
+import base64
 
 load_dotenv()
 
@@ -20,16 +21,34 @@ class MyServer(BaseHTTPRequestHandler):
 
 	def do_POST(self):
 		self.send_response(200)
-		self.send_header("Content-type", "text/html")
-		self.end_headers()
 
 		content_len = int(self.headers.get('Content-Length'))
 		post_body = self.rfile.read(content_len)
-		jsonStr = post_body.decode("utf-8")
-		data = json.loads(jsonStr)
+		try:
+			jsonStr = post_body.decode("utf-8")
+			data = json.loads(jsonStr)
 
-		if self.path == "/start":
-			self.processQueue(data['url'], data['excelId'])
+			if self.path == "/start":
+				self.send_header("Content-type", "text/html")
+				self.end_headers()
+				self.processQueue(data['url'], data['excelId'])
+				return
+			elif self.path  == "/process":
+				self.send_header("Content-type", "application/json")
+				self.end_headers()
+				excelId = data['excelId']
+				key = data['key']
+				query = data['query']
+
+				result = self.processQuery(excelId, key, query)
+				self.wfile.write(bytes(json.dumps(result), "utf-8"))
+				return
+			else:
+				self.send_header("Content-type", "text/html")
+				self.end_headers()
+				
+		except Exception as e:
+			print(e)
 			return
 
 	def do_GET(self):
@@ -103,6 +122,24 @@ class MyServer(BaseHTTPRequestHandler):
 			unlink(siriImageFilename)
 
 		self.requestNewTask()
+
+	def processQuery(self, excelId, key, query):
+		uniqueId = "%s-%s" % (excelId, key)
+		siriResponse, siriImageFilename = ask_siri.ask_siri(query, uniqueId)
+		# siriResponse = "This is siri result"
+		# siriImageFilename = "images/result.jpg"
+		siriImageBase64 = ""
+
+		if (siriImageFilename != None):
+			imageFile = open(siriImageFilename, "rb")
+			siriImageBase64 = base64.b64encode(imageFile.read()).decode("utf-8")
+			imageFile.close()
+			unlink(siriImageFilename)
+		
+		return {
+			"text": siriResponse,
+			"image": siriImageBase64
+		}
 
 def start_server():
 	webServer = HTTPServer((hostName, serverPort), MyServer)
