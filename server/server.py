@@ -4,7 +4,7 @@ import os
 from os import unlink
 import time
 import json
-# import ask_siri
+import ask_siri
 import requests
 import base64
 
@@ -15,9 +15,9 @@ serverPort = int(os.getenv('PORT'))
 
 class MyServer(BaseHTTPRequestHandler):
 	lambdaUrl = ''
-	isRunning = False
+	# isRunning = False
 	deviceId = os.getenv('DEVICE_NAME')
-	excelIds = []
+	# excelIds = []
 
 	def do_POST(self):
 		self.send_response(200)
@@ -31,7 +31,8 @@ class MyServer(BaseHTTPRequestHandler):
 			if self.path == "/start":
 				self.send_header("Content-type", "text/html")
 				self.end_headers()
-				self.processQueue(data['url'], data['excelId'])
+				self.wfile.write(bytes("Not supported for now", "utf-8"))
+				# self.processQueue(data['url'], data['excelId'])
 				return
 			elif self.path  == "/process":
 				self.send_header("Content-type", "application/json")
@@ -66,62 +67,62 @@ class MyServer(BaseHTTPRequestHandler):
 		self.wfile.write(bytes("<h2>Status: %s</h2>" % runningStr, "utf-8"))
 		self.wfile.write(bytes("</body></html>", "utf-8"))
 
-	def processQueue(self, url, excelId):
-		print("START %s - %s" % (url, excelId))
+	# def processQueue(self, url, excelId):
+	# 	print("START %s - %s" % (url, excelId))
 
-		if excelId in self.excelIds:
-			print("Already exist excel ID")
-		else:
-			self.excelIds.append(excelId)
+	# 	if excelId in self.excelIds:
+	# 		print("Already exist excel ID")
+	# 	else:
+	# 		self.excelIds.append(excelId)
 
-		if self.isRunning:
-			return
-		if url == None:
-			return
-		self.lambdaUrl = url
-		self.isRunning = True
-		self.requestNewTask()
+	# 	if self.isRunning:
+	# 		return
+	# 	if url == None:
+	# 		return
+	# 	self.lambdaUrl = url
+	# 	self.isRunning = True
+	# 	self.requestNewTask()
 
-	def requestNewTask(self):
-		if self.excelIds.__len__() == 0:
-			self.isRunning = False
-			return
+	# def requestNewTask(self):
+	# 	if self.excelIds.__len__() == 0:
+	# 		self.isRunning = False
+	# 		return
 
-		excelId = self.excelIds[0]
-		url = "%s/getSiriTask?excelId=%s&deviceId=%s" % (self.lambdaUrl, excelId, self.deviceId)
-		r = requests.get(url = url)
-		task = r.json()
-		print("New Task - %s" % excelId)
-		print(task)
-		if (task['success'] == False):
-			print("Task %s is done" % excelId)
-			self.excelIds.pop(0)
-			self.requestNewTask()
-			return
+	# 	excelId = self.excelIds[0]
+	# 	url = "%s/getSiriTask?excelId=%s&deviceId=%s" % (self.lambdaUrl, excelId, self.deviceId)
+	# 	r = requests.get(url = url)
+	# 	task = r.json()
+	# 	print("New Task - %s" % excelId)
+	# 	print(task)
+	# 	if (task['success'] == False):
+	# 		print("Task %s is done" % excelId)
+	# 		self.excelIds.pop(0)
+	# 		self.requestNewTask()
+	# 		return
 
-		# task: {excelId, key, query}
-		excelId = task['excelId']
-		key = task['key']
-		query = task['query']
-		uniqueId = "%s-%s" % (excelId, key)
-		siriResponse, siriImageFilename = ask_siri.ask_siri(query, uniqueId)
-		requestData = {
-			'excelId': excelId,
-			'key': key,
-			'text': siriResponse,
-		}
-		url = "%s/uploadSiriResult" % self.lambdaUrl
+	# 	# task: {excelId, key, query}
+	# 	excelId = task['excelId']
+	# 	key = task['key']
+	# 	query = task['query']
+	# 	uniqueId = "%s-%s" % (excelId, key)
+	# 	siriResponse, siriImageFilename = ask_siri.ask_siri(query, uniqueId)
+	# 	requestData = {
+	# 		'excelId': excelId,
+	# 		'key': key,
+	# 		'text': siriResponse,
+	# 	}
+	# 	url = "%s/uploadSiriResult" % self.lambdaUrl
 
-		files = {}
-		if (siriImageFilename != None):
-			files = {
-				'imageFile': open(siriImageFilename, 'rb')
-			}
-		requests.post(url = url, data = requestData, files = files)
-		if (siriImageFilename != None):
-			unlink(siriImageFilename)
+	# 	files = {}
+	# 	if (siriImageFilename != None):
+	# 		files = {
+	# 			'imageFile': open(siriImageFilename, 'rb')
+	# 		}
+	# 	requests.post(url = url, data = requestData, files = files)
+	# 	if (siriImageFilename != None):
+	# 		unlink(siriImageFilename)
 
-		self.requestNewTask()
+	# 	self.requestNewTask()
 
 	def processQuery(self, excelId, key, query):
 		uniqueId = "%s-%s" % (excelId, key)
