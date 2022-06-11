@@ -48,44 +48,45 @@ applescripts = {
 				delay 3
 
 				-- catch Siri crashing
-				if exists (siriWindow) then
-					-- get response as soon as it's ready
-					set dataResponse to {}
-					set utteranceResponse to {}
-					set i to 0
-					repeat while dataResponse is {} and i < 100
-						try
-							delay 0.05
-							set i to (i + 1)
-							set utteranceResponse to (get value of (every static text whose value of attribute "AXIdentifier" is "SiriServerUtterance") of group 1 of scroll area 1 of siriWindow)
-							-- exit early if Siri needs your location
-							if "Location Services" is in (utteranceResponse as string) then
-								set dataResponse to "none"
-							-- exit early if Siri didn't understand the query
-							else if "App Store" is in (utteranceResponse as string) then
-								set dataResponse to "none"
-							else if "didn’t catch that" is in (utteranceResponse as string) then
-								set dataResponse to "none"
-							else if "didn’t find anything" is in (utteranceResponse as string) then
-								set dataResponse to "none"
-							-- exit early if Siri didn't understand the query
-							else if "didn’t get that" is in (utteranceResponse as string) then
-								set dataResponse to "none"
-							-- don't accept responses with ellipsis
-							else if "…" is not in (utteranceResponse as string) then
-								-- wait for answer to load after utterance is updated
-								delay 1
-								set dataResponse to (get value of (UI elements) of group 1 of group 1 of scroll area 1 of siriWindow)
-							end if
-						end try
-					end repeat
-				else
-					set utteranceResponse to "~*ERROR*~"
-				end if
+				# if exists (siriWindow) then
+				# 	-- get response as soon as it's ready
+				# 	set dataResponse to {}
+				# 	set utteranceResponse to {}
+				# 	set i to 0
+				# 	repeat while dataResponse is {} and i < 100
+				# 		try
+				# 			delay 0.05
+				# 			set i to (i + 1)
+				# 			set utteranceResponse to (get value of (every static text whose value of attribute "AXIdentifier" is "SiriServerUtterance") of group 1 of scroll area 1 of siriWindow)
+				# 			-- exit early if Siri needs your location
+				# 			if "Location Services" is in (utteranceResponse as string) then
+				# 				set dataResponse to "none"
+				# 			-- exit early if Siri didn't understand the query
+				# 			else if "App Store" is in (utteranceResponse as string) then
+				# 				set dataResponse to "none"
+				# 			else if "didn’t catch that" is in (utteranceResponse as string) then
+				# 				set dataResponse to "none"
+				# 			else if "didn’t find anything" is in (utteranceResponse as string) then
+				# 				set dataResponse to "none"
+				# 			-- exit early if Siri didn't understand the query
+				# 			else if "didn’t get that" is in (utteranceResponse as string) then
+				# 				set dataResponse to "none"
+				# 			-- don't accept responses with ellipsis
+				# 			else if "…" is not in (utteranceResponse as string) then
+				# 				-- wait for answer to load after utterance is updated
+				# 				delay 1
+				# 				set dataResponse to (get value of (UI elements) of group 1 of group 1 of scroll area 1 of siriWindow)
+				# 			end if
+				# 		end try
+				# 	end repeat
+				# else
+				# 	set utteranceResponse to "~*ERROR*~"
+				# end if
 
 			end tell
 
-			return utteranceResponse
+			# return utteranceResponse
+			return ""
 		end run
 	''',
 	'close_siri': '''
@@ -199,7 +200,7 @@ def parse_siri_output(output_list, query):
 
 def ask_siri(query, unique_id=None, image_filepath='images/'):
 	open_siri()
-	siri_utterance = run_osascript(applescripts['ask_siri'], [ query ])
+	run_osascript(applescripts['ask_siri'], [ query ])
 
 	image_filename = None
 	if unique_id != None:
@@ -209,14 +210,14 @@ def ask_siri(query, unique_id=None, image_filepath='images/'):
 		screenshot_window(get_active_window_id(), image_filename)
 		crop_image(image_filename)
 
-	if error_flag in siri_utterance:
-		response = 'ERROR'
-		return response, image_filename
+	# if error_flag in siri_utterance:
+	# 	response = 'ERROR'
+	# 	return response, image_filename
 
-	for value in siri_utterance_value_blacklist:
-		if value in siri_utterance:
-			response = siri_utterance
-			return response, image_filename
+	# for value in siri_utterance_value_blacklist:
+	# 	if value in siri_utterance:
+	# 		response = siri_utterance
+	# 		return response, image_filename
 
 	scraped_data = run_osascript(applescripts['recursively_scrape_siri_ui'])
 	run_osascript(applescripts['close_siri'])

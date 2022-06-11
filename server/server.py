@@ -15,7 +15,7 @@ serverPort = int(os.getenv('PORT'))
 
 class MyServer(BaseHTTPRequestHandler):
 	lambdaUrl = ''
-	# isRunning = False
+	isRunning = False
 	deviceId = os.getenv('DEVICE_NAME')
 	# excelIds = []
 
